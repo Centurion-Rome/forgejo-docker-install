@@ -1,1 +1,2 @@
-.env
+# Secrets (uncomment to ignore real .env)
+# .env
