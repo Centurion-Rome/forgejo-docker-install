@@ -19,6 +19,7 @@ Edit /srv/forgejo/.env and set:
 - SERVER_NAME: your server's hostname or IP (e.g. 192.168.1.10)
 - ROOT_URL: must match how users access Forgejo (e.g. http://192.168.1.10:3000/)
 - DISABLE_REGISTRATION: leave false for now, set true after setup
+- TZ: your timezone (e.g. Europe/Berlin). Leave as shipped unless that's wrong — without it logs and timestamps are UTC.
 
 SERVER_NAME must be the hostname part of ROOT_URL (e.g. ROOT_URL=http://192.168.1.10:3000/ → SERVER_NAME=192.168.1.10). Mismatch breaks clone URLs.
 
@@ -82,6 +83,22 @@ Add a cron job (DB dump + filesystem backup with retention). Adjust `-U sph sph-
 ```shell
 (crontab -l 2>/dev/null; echo "0 2 * * * cd /srv/forgejo && docker compose exec -T postgres pg_dump -U sph sph-forgejo > /srv/forgejo/backups/db-\$(date +\%F).sql && tar czf /srv/forgejo/backups/fs-\$(date +\%F).tar.gz -C /srv repo && tar czf /srv/forgejo/backups/forgejo-data-\$(date +\%F).tar.gz -C /srv/forgejo data/forgejo && find /srv/forgejo/backups -mtime +14 -delete") | crontab -
 ```
+
+# Verify backups (quarterly)
+Backups that were never restored are guesses. Once a quarter, restore the newest DB dump into a scratch database — nothing touches the live one:
+```shell
+cd /srv/forgejo
+LATEST=$(ls -t backups/db-*.sql | head -1)
+docker compose exec -T postgres createdb -U sph verify-restore
+docker compose exec -T postgres psql -U sph -d verify-restore < "$LATEST"
+docker compose exec -T postgres psql -U sph -d verify-restore -c '\dt'   # expect the repo/user tables
+docker compose exec -T postgres dropdb -U sph verify-restore
+```
+Also test one filesystem tarball into a temp dir:
+```shell
+tar tzf "$(ls -t backups/fs-*.tar.gz | head -1)" | head
+```
+If either fails, your backup job is broken — fix it before you need it.
 
 # Restore from backup
 ```shell
