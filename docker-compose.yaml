@@ -1,0 +1,45 @@
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:16
+    container_name: forgejo
+    restart: unless-stopped
+    environment:
+      USER_UID: "1000"
+      USER_GID: "1000"
+      FORGEJO__repository__ROOT: /data/repositories
+      FORGEJO__server__DOMAIN: ${SERVER_NAME:?set SERVER_NAME in .env}
+      FORGEJO__server__SSH_DOMAIN: ${SERVER_NAME}
+      FORGEJO__server__SSH_PORT: "2222"
+      FORGEJO__server__ROOT_URL: ${ROOT_URL:?set ROOT_URL in .env}
+      FORGEJO__service__DISABLE_REGISTRATION: ${DISABLE_REGISTRATION:-false}
+      FORGEJO__database__DB_TYPE: postgres
+      FORGEJO__database__HOST: postgres:5432
+      FORGEJO__database__NAME: sph-forgejo
+      FORGEJO__database__USER: sph
+      FORGEJO__database__PASSWD: ${DB_PASSWD:?set DB_PASSWD in .env}
+    volumes:
+      - ./data/forgejo:/data
+      - /srv/repo:/data/repositories
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    ports:
+      - "3000:3000"
+      - "2222:22"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  postgres:
+    image: postgres:16
+    container_name: forgejo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${DB_PASSWD:?set DB_PASSWD in .env}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
