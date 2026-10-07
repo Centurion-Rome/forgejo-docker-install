@@ -34,14 +34,18 @@ cd /srv/forgejo && docker compose config
 
 ## Directory Permissions (Critical)
 Forgejo runs as UID 1000. If ./data/forgejo doesn't exist, Docker creates it as root, and Forgejo can't write to it.
+```shell
 mkdir -p /srv/forgejo/data/forgejo
 mkdir -p /srv/forgejo/data/postgres
 chown -R 1000:1000 /srv/forgejo/data/forgejo
 chown -R 999:999 /srv/forgejo/data/postgres   # postgres container UID
+```
 
 ## /srv/repo Permissions
+```shell
 mkdir -p /srv/repo
 chown -R 1000:1000 /srv/repo
+```
 
 ## Firewall Rules
 Ports 3000 (HTTP) and 2222 (SSH) must be open:
