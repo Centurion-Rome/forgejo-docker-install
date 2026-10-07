@@ -17,6 +17,14 @@ services:
       FORGEJO__database__NAME: ${POSTGRES_DB}
       FORGEJO__database__USER: ${POSTGRES_USER}
       FORGEJO__database__PASSWD: ${DB_PASSWD:?set DB_PASSWD in .env}
+      FORGEJO__mailer__ENABLED: "true"
+      FORGEJO__mailer__PROTOCOL: smtp
+      FORGEJO__mailer__HOST: ${SMTP_HOST:?set SMTP_HOST in .env}
+      FORGEJO__mailer__PORT: ${SMTP_PORT}
+      FORGEJO__mailer__FROM: ${SMTP_FROM:?set SMTP_FROM in .env}
+      FORGEJO__mailer__USER: ${SMTP_USER}
+      FORGEJO__mailer__PASSWD: ${SMTP_PASS}
+      FORGEJO__mailer__TLS: starttls
     volumes:
       - ./data/forgejo:/data
       - /srv/repo:/data/repositories
