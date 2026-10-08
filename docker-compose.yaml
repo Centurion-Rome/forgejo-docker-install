@@ -32,8 +32,8 @@ services:
       - /srv/repo:/data/repositories
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-      - ./company_logo.svg:/app/public/assets/img/logo.svg:ro
-      - ./company_logo.svg:/app/public/assets/img/favicon.svg:ro
+      - ./company_logo.svg:/data/gitea/public/assets/img/logo.svg:ro
+      - ./company_logo.svg:/data/gitea/public/assets/img/favicon.svg:ro
     ports:
       - "3000:3000"
       - "2222:22"
