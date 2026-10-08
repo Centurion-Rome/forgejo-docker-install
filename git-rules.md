@@ -21,6 +21,40 @@
 | Undo local edits | `git restore <file>` | `svn revert` |
 | History | `git log --oneline` | `svn log` |
 
+### Stage → commit → push, in plain terms
+
+Three steps, and SVN only ever showed you the last one:
+
+```bash
+git status                 # "what am I about to commit?" (like svn status)
+git add -A                 # 1. STAGE: put changes in the "next commit" box
+git commit -m "msg"        # 2. COMMIT: freeze them into history — LOCAL ONLY
+git push                   # 3. PUSH: upload that history to the server
+```
+
+- **Stage** (`git add`) has no SVN equivalent. Think of it as picking which files go into the box. `git add -A` = "everything I changed". Forget it and your commit comes out empty.
+- **Commit** is *not* shared. It's a local save point on your laptop.
+- **Push** is what makes it visible to everyone. Do it often — unpushed commits die with your disk.
+
+```bash
+git add -A && git commit -m "Fix redirect after login" && git push
+```
+
+### `git stash` — park your half-done work
+
+SVN's `svn revert` destroys your edits. Git has a drawer: **stash** saves your working changes and hands you back a clean tree, so you can pull/switch without committing garbage. Nothing is lost, nothing is committed.
+
+```bash
+git stash                   # save all uncommitted changes, clean the tree
+git pull                    # now safe: tree is clean
+git stash pop               # put the changes back on top (and drop the stash)
+git stash list              # see parked stashes
+git stash apply             # put changes back but KEEP them in the stash
+git stash drop              # throw a parked stash away
+```
+
+Rules of thumb: `pop` right after you're done so you don't forget what's in there. Stash is local-only — never a substitute for a commit you care about.
+
 ### The traps that bite SVN folks
 
 1. **Forgetting `git add`** — a commit only includes what you staged. New/changed files must be `git add`ed first.
