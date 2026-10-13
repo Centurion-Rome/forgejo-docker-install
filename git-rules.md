@@ -93,6 +93,28 @@ Rules of thumb:
 - CI runs on the PR; don't merge while checks are red.
 - After merge, sync `main` and delete the branch.
 
+### A new bug or a new feature, end to end
+
+Every new task follows the same path: branch named after the Jira ticket → commits on it → test locally → PR against `main` → fix review feedback → merge into `main` only after approval.
+
+| Step | Command line | TortoiseGit (GUI) |
+|---|---|---|
+| 1. Sync `main` | `git switch main && git pull` | right-click repo → **Switch…** → `main`, then **Update** |
+| 2. Branch from the ticket | `git switch -c fix/JIRA-123` | right-click → **Branch / tag** → **Create branch…**, name it `fix/JIRA-123`, check *Checkout new branch* |
+| 3. Work, commit as you go | `git add -A && git commit -m "JIRA-123: …"` | **Commit** (the dialog stages all changes for you) |
+| 4. Test locally | run your build/tests | — (just run it) |
+| 5. Push the branch | `git push -u origin fix/JIRA-123` | right-click → **Push** (branch `fix/JIRA-123`) |
+| 6. Open the PR against `main` | `gh pr create --fill`, or the URL the push output prints | no GUI button — open the printed compare URL / the project web UI; link the ticket in the body so it closes on merge |
+| 7. Review round | commit + push more to the **same** branch | **Commit** + **Push** again; the PR updates itself |
+| 8. Merge after approval | `gh pr merge 42 --squash` (or the web UI *Merge*) | web UI *Merge* button — TortoiseGit does not merge PRs |
+| 9. Sync & clean up | `git switch main && git pull && git branch -d fix/JIRA-123` | **Update** on `main`; **Branch / tag** → **Delete branch** `fix/JIRA-123` |
+
+Rules of thumb:
+
+- The ticket number lives in the branch name, so ticket ↔ branch ↔ PR are all findable by the same string.
+- No push, no PR — reviewers work from the remote branch, so push every commit before asking for review.
+- Never merge before approval and green CI checks.
+
 ### Branches & Pull Requests
 
 #### Branches
