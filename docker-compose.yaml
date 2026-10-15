@@ -14,6 +14,7 @@ services:
       FORGEJO__service__DISABLE_REGISTRATION: ${DISABLE_REGISTRATION:-false}
       FORGEJO__repository__MAX_CREATION_LIMIT: "0"
       FORGEJO__repository__DISABLE_REGULAR_ORG_CREATION: "true"
+      FORGEJO__repository__AUTO_WATCH_NEW_REPOS: "true"
       FORGEJO__database__DB_TYPE: postgres
       FORGEJO__database__HOST: postgres:5432
       FORGEJO__database__NAME: ${POSTGRES_DB}
