@@ -1,3 +1,5 @@
+# sandkasten
+
 ## Git for ex-SVN developers
 
 ### Mental model (the short version)
@@ -8,6 +10,15 @@
   - `git push` — publishes it to the remote.
 - `svn up` → `git pull`
 - SVN has no local branches. Git branches are cheap local pointers — use one per task instead of `svn:export` tricks.
+
+### First-time setup: your Git identity
+
+Set your name and email once on this machine — Git stores them globally, so they apply to **all** repositories for this user. Replace the placeholders with your own name and email (use your Sph company address).
+
+```bash
+git config --global user.name "Nachname"
+git config --global user.email "vorname.nachname@sph-gmbh.de"
+```
 
 ### Daily commands
 
@@ -20,40 +31,6 @@
 | Update | `git pull` | `svn update` |
 | Undo local edits | `git restore <file>` | `svn revert` |
 | History | `git log --oneline` | `svn log` |
-
-### Stage → commit → push, in plain terms
-
-Three steps, and SVN only ever showed you the last one:
-
-```bash
-git status                 # "what am I about to commit?" (like svn status)
-git add -A                 # 1. STAGE: put changes in the "next commit" box
-git commit -m "msg"        # 2. COMMIT: freeze them into history — LOCAL ONLY
-git push                   # 3. PUSH: upload that history to the server
-```
-
-- **Stage** (`git add`) has no SVN equivalent. Think of it as picking which files go into the box. `git add -A` = "everything I changed". Forget it and your commit comes out empty.
-- **Commit** is *not* shared. It's a local save point on your laptop.
-- **Push** is what makes it visible to everyone. Do it often — unpushed commits die with your disk.
-
-```bash
-git add -A && git commit -m "Fix redirect after login" && git push
-```
-
-### `git stash` — park your half-done work
-
-SVN's `svn revert` destroys your edits. Git has a drawer: **stash** saves your working changes and hands you back a clean tree, so you can pull/switch without committing garbage. Nothing is lost, nothing is committed.
-
-```bash
-git stash                   # save all uncommitted changes, clean the tree
-git pull                    # now safe: tree is clean
-git stash pop               # put the changes back on top (and drop the stash)
-git stash list              # see parked stashes
-git stash apply             # put changes back but KEEP them in the stash
-git stash drop              # throw a parked stash away
-```
-
-Rules of thumb: `pop` right after you're done so you don't forget what's in there. Stash is local-only — never a substitute for a commit you care about.
 
 ### The traps that bite SVN folks
 
@@ -92,28 +69,6 @@ Rules of thumb:
 - Push every commit before asking for review — reviewers work from the remote branch.
 - CI runs on the PR; don't merge while checks are red.
 - After merge, sync `main` and delete the branch.
-
-### A new bug or a new feature, end to end
-
-Every new task follows the same path: branch named after the Jira ticket → commits on it → test locally → PR against `main` → fix review feedback → merge into `main` only after approval.
-
-| Step | Command line | TortoiseGit (GUI) |
-|---|---|---|
-| 1. Sync `main` | `git switch main && git pull` | right-click repo → **Switch…** → `main`, then **Update** |
-| 2. Branch from the ticket | `git switch -c fix/JIRA-123` | right-click → **Branch / tag** → **Create branch…**, name it `fix/JIRA-123`, check *Checkout new branch* |
-| 3. Work, commit as you go | `git add -A && git commit -m "JIRA-123: …"` | **Commit** (the dialog stages all changes for you) |
-| 4. Test locally | run your build/tests | — (just run it) |
-| 5. Push the branch | `git push -u origin fix/JIRA-123` | right-click → **Push** (branch `fix/JIRA-123`) |
-| 6. Open the PR against `main` | `gh pr create --fill`, or the URL the push output prints | no GUI button — open the printed compare URL / the project web UI; link the ticket in the body so it closes on merge |
-| 7. Review round | commit + push more to the **same** branch | **Commit** + **Push** again; the PR updates itself |
-| 8. Merge after approval | `gh pr merge 42 --squash` (or the web UI *Merge*) | web UI *Merge* button — TortoiseGit does not merge PRs |
-| 9. Sync & clean up | `git switch main && git pull && git branch -d fix/JIRA-123` | **Update** on `main`; **Branch / tag** → **Delete branch** `fix/JIRA-123` |
-
-Rules of thumb:
-
-- The ticket number lives in the branch name, so ticket ↔ branch ↔ PR are all findable by the same string.
-- No push, no PR — reviewers work from the remote branch, so push every commit before asking for review.
-- Never merge before approval and green CI checks.
 
 ### Branches & Pull Requests
 
