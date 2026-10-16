@@ -128,3 +128,12 @@ Then run:
 ```shell
 cd /srv/forgejo && ./docker-update.sh
 ```
+
+
+# Tips
+
+## copy file
+``` shell 
+scp .\docker-compose.yaml sph-admin@192.168.10.93:/srv/forgejo/
+```
+

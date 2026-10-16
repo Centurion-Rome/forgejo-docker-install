@@ -6,20 +6,28 @@ services:
     environment:
       USER_UID: "1000"
       USER_GID: "1000"
+
       FORGEJO__repository__ROOT: /data/repositories
+
       FORGEJO__server__DOMAIN: ${SERVER_NAME:?set SERVER_NAME in .env}
       FORGEJO__server__SSH_DOMAIN: ${SERVER_NAME}
       FORGEJO__server__SSH_PORT: "2222"
       FORGEJO__server__ROOT_URL: ${ROOT_URL:?set ROOT_URL in .env}
+
       FORGEJO__service__DISABLE_REGISTRATION: ${DISABLE_REGISTRATION:-false}
+      FORGEJO__service__ENABLE_NOTIFY_MAIL: "true"
+      FORGEJO__admin__DEFAULT_EMAIL_NOTIFICATIONS: "enabled"
+
       FORGEJO__repository__MAX_CREATION_LIMIT: "0"
       FORGEJO__repository__DISABLE_REGULAR_ORG_CREATION: "true"
       FORGEJO__repository__AUTO_WATCH_NEW_REPOS: "true"
+
       FORGEJO__database__DB_TYPE: postgres
       FORGEJO__database__HOST: postgres:5432
       FORGEJO__database__NAME: ${POSTGRES_DB}
       FORGEJO__database__USER: ${POSTGRES_USER}
       FORGEJO__database__PASSWD: ${DB_PASSWD:?set DB_PASSWD in .env}
+
       FORGEJO__mailer__ENABLED: "true"
       FORGEJO__mailer__PROTOCOL: smtp
       FORGEJO__mailer__SMTP_ADDR: ${SMTP_HOST:?set SMTP_HOST in .env}
@@ -27,7 +35,7 @@ services:
       FORGEJO__mailer__FROM: ${SMTP_FROM:?set SMTP_FROM in .env}
       FORGEJO__mailer__USER: ${SMTP_USER}
       FORGEJO__mailer__PASSWD: ${SMTP_PASS}
-      
+
     volumes:
       - ./data/forgejo:/data
       - /srv/repo:/data/repositories
@@ -35,12 +43,15 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - ./company_logo.svg:/data/gitea/public/assets/img/logo.svg:ro
       - ./company_logo.svg:/data/gitea/public/assets/img/favicon.svg:ro
+
     ports:
       - "3000:3000"
       - "2222:22"
+
     depends_on:
       postgres:
         condition: service_healthy
+
   postgres:
     image: postgres:16
     container_name: forgejo-postgres
@@ -52,7 +63,44 @@ services:
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
       interval: 10s
       timeout: 5s
       retries: 5
+
+  runner-dind:
+    image: docker:dind
+    container_name: forgejo-runner-dind
+    privileged: true
+    command:
+      - dockerd
+      - -H
+      - tcp://0.0.0.0:2375
+      - --tls=false
+    restart: unless-stopped
+    volumes:
+      - runner-docker-data:/var/lib/docker
+
+  forgejo-runner:
+    image: data.forgejo.org/forgejo/runner:13
+    container_name: forgejo-runner
+    restart: unless-stopped
+    depends_on:
+      - runner-dind
+      - forgejo
+    environment:
+      DOCKER_HOST: tcp://runner-dind:2375
+    user: "1001:1001"
+    working_dir: /data
+    volumes:
+      - ./data/forgejo-runner:/data
+    command:
+      - forgejo-runner
+      - daemon
+      - --config
+      - /data/runner-config.yml
+
+volumes:
+  runner-docker-data:
